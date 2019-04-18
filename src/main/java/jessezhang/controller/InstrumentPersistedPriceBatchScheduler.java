@@ -85,6 +85,9 @@ public class InstrumentPersistedPriceBatchScheduler {
     public StepBuilderFactory stepBuilderFactory;
     
     @Autowired
+    Job reportInstrumentPriceJob;
+    
+    @Autowired
     public UpdateHighFrequencyPersistedPriceJobCompletionNotificationListener updateHighFrequencyPersistedPriceJobCompletionNotificationListener;
     
     @Autowired
@@ -271,14 +274,15 @@ public class InstrumentPersistedPriceBatchScheduler {
         JobExecution execution = updatePersistedPriceJobLauncher().run( lowFrequencyUpdateAveragePriceJob(), param);
         timeInSeconds.getAndIncrement();
         if (timeInSeconds.getAcquire() >2) { //TODO: extract as variable
-            log.info("All price processing jobs are completed. Please press ctrl+c to exit the program.");
+            reportInstrumentPrice();
+            log.info("All price processing jobs are completed, and the report is generated in the /output folder. Please press ctrl+c to exit the program.");
             stopJobSchedulerWhenSchedulerDestroyed();
         }
     }
     
     @Scheduled(fixedRate = 1000)
     public void counter() throws Exception {
-        log.info(String.valueOf(timer.getAcquire()));
+        log.info("Time in seconds: " + String.valueOf(timer.getAcquire()));
         timer.getAndIncrement();
     }
 
@@ -290,6 +294,11 @@ public class InstrumentPersistedPriceBatchScheduler {
     @Bean
 	public TaskScheduler poolScheduler() {
     	return new CustomTaskScheduler();
+	}
+	
+	public void reportInstrumentPrice() throws Exception {
+	    JobParameters param = new JobParametersBuilder().addString("Job-reportInstrumentPrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
+        JobExecution execution = updatePersistedPriceJobLauncher().run(reportInstrumentPriceJob, param);
 	}
 	
 	public void stopJobSchedulerWhenSchedulerDestroyed() throws Exception {
