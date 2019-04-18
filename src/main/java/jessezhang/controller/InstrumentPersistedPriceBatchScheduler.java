@@ -85,7 +85,13 @@ public class InstrumentPersistedPriceBatchScheduler {
     public StepBuilderFactory stepBuilderFactory;
     
     @Autowired
-    public UpdatePersistedPriceJobCompletionNotificationListener updatePersistedPriceJobCompletionNotificationListener;
+    public UpdateHighFrequencyPersistedPriceJobCompletionNotificationListener updateHighFrequencyPersistedPriceJobCompletionNotificationListener;
+    
+    @Autowired
+    public UpdateLowFrequencyPersistedPriceJobCompletionNotificationListener updateLowFrequencyPersistedPriceJobCompletionNotificationListener;
+
+    @Autowired
+    public UpdateAveragePriceJobCompletionNotificationListener updateAveragePriceJobCompletionNotificationListener;
     
     @Bean
     public JobLauncher updatePersistedPriceJobLauncher() throws Exception {
@@ -166,7 +172,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     public Job highFrequencyUpdatePersistedPriceJob() {
         return jobBuilderFactory.get("highFrequencyUpdatePersistedPriceJob")
             .incrementer(new RunIdIncrementer())
-            .listener(updatePersistedPriceJobCompletionNotificationListener)
+            .listener(updateHighFrequencyPersistedPriceJobCompletionNotificationListener)
             .flow(highFrequencyUpdatePersistedPriceStep())
             .end()
             .build();
@@ -184,7 +190,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     public Job highFrequencyUpdateAveragePriceJob() {
         return jobBuilderFactory.get("highFrequencyUpdateAveragePriceJob")
             .incrementer(new RunIdIncrementer())
-            .listener(updatePersistedPriceJobCompletionNotificationListener)
+            .listener(updateAveragePriceJobCompletionNotificationListener)
             .flow(highFrequencyUpdateAveragePriceStep())
             .end()
             .build();
@@ -202,7 +208,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     public Job lowFrequencyUpdatePersistedPriceJob() {
         return jobBuilderFactory.get("lowFrequencyUpdatePersistedPriceJob")
             .incrementer(new RunIdIncrementer())
-            .listener(updatePersistedPriceJobCompletionNotificationListener)
+            .listener(updateLowFrequencyPersistedPriceJobCompletionNotificationListener)
             .flow(lowFrequencyUpdatePersistedPriceStep())
             .end()
             .build();
@@ -220,7 +226,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     public Job lowFrequencyUpdateAveragePriceJob() {
         return jobBuilderFactory.get("lowFrequencyUpdateAveragePriceJob")
             .incrementer(new RunIdIncrementer())
-            .listener(updatePersistedPriceJobCompletionNotificationListener)
+            .listener(updateAveragePriceJobCompletionNotificationListener)
             .flow(lowFrequencyUpdateAveragePriceStep())
             .end()
             .build();

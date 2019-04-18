@@ -10,21 +10,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UpdatePersistedPriceJobCompletionNotificationListener extends JobExecutionListenerSupport {
+public class UpdateAveragePriceJobCompletionNotificationListener extends JobExecutionListenerSupport {
 
-	private static final Logger log = LoggerFactory.getLogger(UpdatePersistedPriceJobCompletionNotificationListener.class);
+	private static final Logger log = LoggerFactory.getLogger(UpdateAveragePriceJobCompletionNotificationListener.class);
 
 	private final JdbcTemplate jdbcTemplate;
 
 	@Autowired
-	public UpdatePersistedPriceJobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
+	public UpdateAveragePriceJobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
 		if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-			log.info("Persisted price update job finished, time to verify the results:");
+			log.debug("Average price update job finished, time to verify the results:");
 			
 			jdbcTemplate.query(
 				"SELECT " + 
@@ -42,7 +42,7 @@ public class UpdatePersistedPriceJobCompletionNotificationListener extends JobEx
 					resultSet.getDouble("highest_price"),
 					resultSet.getDouble("second_highest_price"),
 					resultSet.getDouble("average_price"))
-			).forEach(instrument -> log.info("Found <" + instrument + "> in the database.")); //TODO: modify the log statement for reporting
+			).forEach(instrument -> log.debug("Found <" + instrument + "> in the database.")); //TODO: modify the log statement for reporting
 		}
 	}
 }

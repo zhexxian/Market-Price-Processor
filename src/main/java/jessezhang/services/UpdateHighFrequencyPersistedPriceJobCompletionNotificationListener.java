@@ -10,21 +10,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ImportMarketPriceJobCompletionNotificationListener extends JobExecutionListenerSupport {
+public class UpdateHighFrequencyPersistedPriceJobCompletionNotificationListener extends JobExecutionListenerSupport {
 
-	private static final Logger log = LoggerFactory.getLogger(ImportMarketPriceJobCompletionNotificationListener.class);
+	private static final Logger log = LoggerFactory.getLogger(UpdateHighFrequencyPersistedPriceJobCompletionNotificationListener.class);
 
 	private final JdbcTemplate jdbcTemplate;
 
 	@Autowired
-	public ImportMarketPriceJobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
+	public UpdateHighFrequencyPersistedPriceJobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
 		this.jdbcTemplate = jdbcTemplate;
 	}
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
 		if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-			log.debug("Market price import job finished, time to verify the results");
+			log.debug("High frequency persisted price update job finished, time to verify the results:");
 			
 			jdbcTemplate.query(
 				"SELECT " + 
@@ -34,7 +34,7 @@ public class ImportMarketPriceJobCompletionNotificationListener extends JobExecu
 					"highest_price, " + 
 					"second_highest_price, " + 
 					"average_price " + 
-				"FROM instruments",
+				"FROM instruments ",
 				(resultSet, row) -> new Instrument(
 					resultSet.getString("name"),
 					resultSet.getDouble("current_price"),
@@ -42,8 +42,8 @@ public class ImportMarketPriceJobCompletionNotificationListener extends JobExecu
 					resultSet.getDouble("highest_price"),
 					resultSet.getDouble("second_highest_price"),
 					resultSet.getDouble("average_price"))
-			).forEach(instrument -> log.debug("Found <" + instrument + "> in the database."));	
-					
+				).forEach(instrument -> log.debug("Found <" + instrument + "> in the database."));
+
 			jdbcTemplate.query(
 				"SELECT " + 
 					"name, " + 
@@ -52,7 +52,9 @@ public class ImportMarketPriceJobCompletionNotificationListener extends JobExecu
 					"highest_price, " + 
 					"second_highest_price, " + 
 					"average_price " + 
-				"FROM instruments",
+				"FROM instruments " + 
+				"WHERE " +
+					"name = 'BP.L' OR name = 'GOOG'",
 				(resultSet, row) -> new Instrument(
 					resultSet.getString("name"),
 					resultSet.getDouble("current_price"),
@@ -60,8 +62,7 @@ public class ImportMarketPriceJobCompletionNotificationListener extends JobExecu
 					resultSet.getDouble("highest_price"),
 					resultSet.getDouble("second_highest_price"),
 					resultSet.getDouble("average_price"))
-			).forEach(instrument -> log.info(instrument.getName() + ": " + String.valueOf(instrument.getCurrentPrice())));
+				).forEach(instrument -> log.info(instrument.getName() + " updated"));
 		}
 	}
-	
 }

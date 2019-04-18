@@ -39,7 +39,7 @@ public class InstrumentHighPriceProcessor implements ItemProcessor<Instrument, I
 
         final Instrument transformedInstrument = new Instrument(name, currentPrice, persistedPrice, highestPrice, secondHighestPrice, averagePrice);
 
-        log.info("Converting (" + instrument + ") into (" + transformedInstrument + ")");
+        log.debug("Converting (" + instrument + ") into (" + transformedInstrument + ")");
         return transformedInstrument;
     }
 
