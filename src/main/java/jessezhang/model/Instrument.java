@@ -72,7 +72,7 @@ public class Instrument {
 
     @Override
     public String toString() {
-        return String.format("%s: %f - %f - %f -%f - %f", name, currentPrice, persistedPrice, highestPrice, secondHighestPrice, averagePrice); //TODO: check format precision
+        return String.format("%s: %f - %f - %f -%f - %f", name, currentPrice, persistedPrice, highestPrice, secondHighestPrice, averagePrice);
     }
 
 }

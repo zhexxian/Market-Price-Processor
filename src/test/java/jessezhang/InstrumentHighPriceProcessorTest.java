@@ -10,6 +10,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 @SpringBootTest
 public class InstrumentHighPriceProcessorTest {
     private static InstrumentHighPriceProcessor processor = new InstrumentHighPriceProcessor();
+    
+    private static final double UNCERTAINTY_DELTA = 0.00000001;
 
     @Test
     public void testProcessUpdateHighestPrice() throws Exception {
@@ -17,8 +19,8 @@ public class InstrumentHighPriceProcessorTest {
         Instrument originalInstrument = new Instrument("TEST1", 100.0, 100.0, 99.0, 98.0, 100.0);
         Instrument transformedInstrument = processor.process(originalInstrument);
         
-        Assert.assertEquals(100.0, transformedInstrument.getHighestPrice(), 0.1); //TODO: update delta precision
-        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), 0.1); 
+        Assert.assertEquals(100.0, transformedInstrument.getHighestPrice(), UNCERTAINTY_DELTA);
+        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), UNCERTAINTY_DELTA); 
     }
     
     @Test
@@ -27,8 +29,8 @@ public class InstrumentHighPriceProcessorTest {
         Instrument originalInstrument = new Instrument("TEST2", 100.0, 100.0, 101.0, 98.0, 100.0);
         Instrument transformedInstrument = processor.process(originalInstrument);
         
-        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), 0.1); 
-        Assert.assertEquals(100.0, transformedInstrument.getSecondHighestPrice(), 0.1); 
+        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), UNCERTAINTY_DELTA); 
+        Assert.assertEquals(100.0, transformedInstrument.getSecondHighestPrice(), UNCERTAINTY_DELTA); 
     }
     
     @Test
@@ -37,8 +39,8 @@ public class InstrumentHighPriceProcessorTest {
         Instrument originalInstrument = new Instrument("TEST3", 100.0, 101.0, 101.0, 99.0, 102.0);
         Instrument transformedInstrument = processor.process(originalInstrument);
         
-        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), 0.1); 
-        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), 0.1); 
+        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), UNCERTAINTY_DELTA); 
+        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), UNCERTAINTY_DELTA); 
     }
     
     @Test
@@ -47,8 +49,8 @@ public class InstrumentHighPriceProcessorTest {
         Instrument originalInstrument = new Instrument("TEST4", 100.0, 99.0, 101.0, 99.0, 102.0);
         Instrument transformedInstrument = processor.process(originalInstrument);
         
-        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), 0.1); 
-        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), 0.1); 
+        Assert.assertEquals(101.0, transformedInstrument.getHighestPrice(), UNCERTAINTY_DELTA); 
+        Assert.assertEquals(99.0, transformedInstrument.getSecondHighestPrice(), UNCERTAINTY_DELTA); 
     }
     
     @Test
@@ -57,8 +59,8 @@ public class InstrumentHighPriceProcessorTest {
         Instrument originalInstrument = new Instrument("TEST5", 100.0, 100.0, 102.0, 101.0, 100.0);
         Instrument transformedInstrument = processor.process(originalInstrument);
         
-        Assert.assertEquals(102.0, transformedInstrument.getHighestPrice(), 0.1); 
-        Assert.assertEquals(101.0, transformedInstrument.getSecondHighestPrice(), 0.1); 
+        Assert.assertEquals(102.0, transformedInstrument.getHighestPrice(), UNCERTAINTY_DELTA); 
+        Assert.assertEquals(101.0, transformedInstrument.getSecondHighestPrice(), UNCERTAINTY_DELTA); 
     }
 
 }

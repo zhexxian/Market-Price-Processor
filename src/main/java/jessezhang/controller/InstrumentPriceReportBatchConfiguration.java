@@ -76,7 +76,7 @@ public class InstrumentPriceReportBatchConfiguration {
         StringHeaderWriter headerWriter = new StringHeaderWriter(priceReportFileHeader);
         writer.setHeaderCallback(headerWriter);
         writer.setResource(outputResource);
-        writer.setAppendAllowed(true);
+        writer.setAppendAllowed(false);
         writer.setLineAggregator(new DelimitedLineAggregator<Instrument>() {{
                 setDelimiter(",");
                 setFieldExtractor(new BeanWrapperFieldExtractor<Instrument>() {{

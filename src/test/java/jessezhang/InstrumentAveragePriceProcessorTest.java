@@ -9,9 +9,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class InstrumentAveragePriceProcessorTest {
-    private static int count = 4; //TODO: extract as variable
+    private static int count = 4;
 
     private static InstrumentAveragePriceProcessor processor = new InstrumentAveragePriceProcessor(count); 
+    
+    private static final double UNCERTAINTY_DELTA = 0.00000001;
 
     @Test
     public void testProcess() throws Exception {
@@ -21,7 +23,7 @@ public class InstrumentAveragePriceProcessorTest {
         
         double newAveragePrice = (1.0/count)*((count-1)*80.0+100.0);
         
-        Assert.assertEquals(newAveragePrice, transformedInstrument.getAveragePrice(), 0.1); //TODO: update delta precision
+        Assert.assertEquals(newAveragePrice, transformedInstrument.getAveragePrice(), UNCERTAINTY_DELTA);
     }
 
 }
