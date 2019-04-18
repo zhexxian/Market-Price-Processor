@@ -10,9 +10,9 @@ The 4 sample instruments are split into 2 groups:
 2. The low update frequency group(`BT.L` and `VOD.L`): price persists every 5 seconds.
 
 
-## Architecture
+## Implementation
 
-### Implementation
+### Libraries
 
 *Market Price Processor* is written in Java programming language that implements the Spring framework. It integrates with HSQLDB and Logback, and uses Maven for dependency management.
 
@@ -20,9 +20,9 @@ The 4 sample instruments are split into 2 groups:
 The instrument market data is mocked in a text file (refer to `/src/main/resources/sample-data.txt`) that is read continuously in a loop. 
 The data update output is on the command line, while the analysis of 2nd highest and averge price is generated in a csv file (located in `/output`). The logging output is saved too (located in `/logs`).
 
-### Notable Classes & Methods
+### Architecture
 
-#### Instrument Model
+#### Model
 The model is defined in the `Instrument` class, and a database schema  `schema-all.sql` stores the instrument details.
 
 #### Reader and Writer
@@ -48,7 +48,7 @@ The "average price" is calculated by incremental averaging. Instead of keeping a
 
 Formula:
 ```
-newAverage = (1/count)*((count-1)*currenAverage+currentValue)
+newAverage = (1/count) * ((count-1) * currenAverage+currentValue)
 ```
 
 ### Decide 2nd highest price
