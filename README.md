@@ -34,6 +34,9 @@ Spring batch processing is implemented to process the group of instruments in on
 #### Task Scheduler
 Task scheduler is implemented for price processing at defined fix frequency.
 
+#### Multi-Threading
+Spring Boot's asynchronous method call is enabled with to make the market price update tasks run on different threads.
+
 
 ## Assumptions
 

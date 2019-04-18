@@ -41,6 +41,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.ScheduledMethodRunnable;
 import org.springframework.core.io.ClassPathResource;
 
+import org.springframework.scheduling.annotation.Async;
+
 @Configuration
 @EnableBatchProcessing
 public class InstrumentMarketPriceBatchScheduler {
@@ -130,6 +132,7 @@ public class InstrumentMarketPriceBatchScheduler {
     // Scheduled Jobs
     //================================================================================
    
+    @Async
     @Scheduled(fixedRate = MARKET_PRICE_IMPORT_INTERVAL_IN_MILISECONDS)
     public void importMarketPrice() throws Exception {
         log.info("Time in seconds: " + String.valueOf(timeInSeconds.getAcquire()));
