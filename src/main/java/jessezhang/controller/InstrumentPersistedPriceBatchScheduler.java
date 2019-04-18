@@ -110,6 +110,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     }
        
     private AtomicInteger timeInSeconds = new AtomicInteger(0); //TODO: rename
+    private AtomicInteger timer = new AtomicInteger(1); //TODO: rename
     final private int numberOfInstruments = 4; //TODO: extract this variable
      
     //================================================================================
@@ -266,7 +267,6 @@ public class InstrumentPersistedPriceBatchScheduler {
 
     @Scheduled(fixedRate = 5000, initialDelay = 20000) //TODO: extract as variable
     public void lowFrequencyUpdateAveragePrice() throws Exception {
-        log.info(String.valueOf(timeInSeconds.getAcquire()));
         JobParameters param = new JobParametersBuilder().addString("Job-lowFrequencyUpdateAveragePrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         JobExecution execution = updatePersistedPriceJobLauncher().run( lowFrequencyUpdateAveragePriceJob(), param);
         timeInSeconds.getAndIncrement();
@@ -275,6 +275,13 @@ public class InstrumentPersistedPriceBatchScheduler {
             stopJobSchedulerWhenSchedulerDestroyed();
         }
     }
+    
+    @Scheduled(fixedRate = 1000)
+    public void counter() throws Exception {
+        log.info(String.valueOf(timer.getAcquire()));
+        timer.getAndIncrement();
+    }
+
     
     //================================================================================
     // Scheduler

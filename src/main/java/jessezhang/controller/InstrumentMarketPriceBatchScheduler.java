@@ -126,7 +126,6 @@ public class InstrumentMarketPriceBatchScheduler {
    
     @Scheduled(fixedRate = 1000) //TODO: extract this variable
     public void importMarketPrice() throws Exception {
-        log.info(String.valueOf(timeInSeconds.getAcquire()));
         JobParameters param = new JobParametersBuilder().addString("JobID-importMarketPrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         
         JobExecution execution = importMarketPriceJobLauncher().run( importMarketPriceJob(), param);
