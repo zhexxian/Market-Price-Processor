@@ -42,7 +42,7 @@ public class UpdateAveragePriceJobCompletionNotificationListener extends JobExec
 					resultSet.getDouble("highest_price"),
 					resultSet.getDouble("second_highest_price"),
 					resultSet.getDouble("average_price"))
-			).forEach(instrument -> log.debug("Found <" + instrument + "> in the database.")); //TODO: modify the log statement for reporting
+			).forEach(instrument -> log.debug("Found <" + instrument + "> in the database."));
 		}
 	}
 }

@@ -32,6 +32,7 @@ import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.DefaultLineMapper;
 import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -45,7 +46,16 @@ import org.springframework.core.io.ClassPathResource;
 public class InstrumentMarketPriceBatchScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(InstrumentMarketPriceBatchScheduler.class);
+    
+    private static final int MARKET_PRICE_IMPORT_INTERVAL_IN_MILISECONDS = 1000;
 
+    final private int fileLengthInSeconds = 10;
+    
+    private AtomicInteger timeInSeconds = new AtomicInteger(0);
+    
+    @Value("${number.of.instruments}")
+    private int numberOfInstruments;
+    
     @Autowired
     public DataSource dataSource;
     
@@ -57,10 +67,6 @@ public class InstrumentMarketPriceBatchScheduler {
     
     @Autowired
     public ImportMarketPriceJobCompletionNotificationListener importMarketPriceJobCompletionNotificationListener;
-        
-    private AtomicInteger timeInSeconds = new AtomicInteger(0);
-    final private int numberOfInstruments = 4; //TODO: extract as variable
-    int fileLengthInSeconds = 10; //TODO: extract as variable
 
     //================================================================================
     // Reader, Writer, Processor
@@ -79,8 +85,8 @@ public class InstrumentMarketPriceBatchScheduler {
             .fieldSetMapper(new BeanWrapperFieldSetMapper<Instrument>() {{
                 setTargetType(Instrument.class);
             }})
-            .currentItemCount(i*numberOfInstruments)
-            .maxItemCount((i+1)*numberOfInstruments) //TODO: create count variable; max item = batch size + currentItemCount
+            .currentItemCount(i * numberOfInstruments)
+            .maxItemCount((i + 1) * numberOfInstruments)
             .build());
         }
         return readerArray;
@@ -114,8 +120,8 @@ public class InstrumentMarketPriceBatchScheduler {
 
     public Step importMarketPriceStep() {
         return stepBuilderFactory.get("importMarketPriceStep")
-            .<Instrument, Instrument> chunk(4) //TODO: extract value "4" to properties file
-            .reader(readers().get(timeInSeconds.getAcquire() % 10)) //TODO: make the time variable loop ceil(30/10); logs
+            .<Instrument, Instrument> chunk(numberOfInstruments)
+            .reader(readers().get(timeInSeconds.getAcquire() % fileLengthInSeconds)) // To loop through the file, line index = ceil(30/10)
             .writer(instrumentMarketPriceWriter())
             .build();
     }
@@ -124,10 +130,10 @@ public class InstrumentMarketPriceBatchScheduler {
     // Scheduled Jobs
     //================================================================================
    
-    @Scheduled(fixedRate = 1000) //TODO: extract this variable
+    @Scheduled(fixedRate = MARKET_PRICE_IMPORT_INTERVAL_IN_MILISECONDS)
     public void importMarketPrice() throws Exception {
+        log.info("Time in seconds: " + String.valueOf(timeInSeconds.getAcquire()));
         JobParameters param = new JobParametersBuilder().addString("JobID-importMarketPrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
-        
         JobExecution execution = importMarketPriceJobLauncher().run( importMarketPriceJob(), param);
         timeInSeconds.getAndIncrement();
     }

@@ -31,6 +31,7 @@ import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourc
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -71,6 +72,29 @@ public class InstrumentPersistedPriceBatchScheduler {
             "FROM instruments " +
             "WHERE " +
                 "name = 'BT.L' OR name = 'VOD.L'";
+    
+    private static final int PERSISTENT_PRICE_HIGH_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS = 3000;
+    
+    private static final int PERSISTENT_PRICE_LOW_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS = 5000;
+    
+    private static final int AVERAGE_PRICE_HIGH_FREQUENCY_INITIAL_DELAY_IN_MILISECONDS = 18000;
+    
+    private static final int AVERAGE_PRICE_LOW_FREQUENCY_INITIAL_DELAY_IN_MILISECONDS = 20000;
+    
+    private static final int
+    HIGH_FREQUENCY_INSTRUMENT_UPDATE_AVERAGE_BASE = 4;
+
+    private static final int
+    LOW_FREQUENCY_INSTRUMENT_UPDATE_AVERAGE_BASE = 2;
+
+    private AtomicInteger timer = new AtomicInteger(0);
+    private AtomicInteger timeOfLowFrequencyInstrumentUpdateAverageBase = new AtomicInteger(0);
+
+    @Value("${number.of.high.update.frequency.instruments}")
+    private int numberOfHighUpdateFrequencyInstruments;
+        
+    @Value("${number.of.low.update.frequency.instruments}")
+    private int numberOfLowUpdateFrequencyInstruments;
 
     @Autowired
     private ApplicationContext context;
@@ -111,10 +135,6 @@ public class InstrumentPersistedPriceBatchScheduler {
         factory.setTransactionManager(new ResourcelessTransactionManager());
         return (JobRepository) factory.getObject();
     }
-       
-    private AtomicInteger timeInSeconds = new AtomicInteger(0); //TODO: rename
-    private AtomicInteger timer = new AtomicInteger(1); //TODO: rename
-    final private int numberOfInstruments = 4; //TODO: extract this variable
      
     //================================================================================
     // Reader, Writer, Processor
@@ -145,12 +165,12 @@ public class InstrumentPersistedPriceBatchScheduler {
     
     @Bean
     public InstrumentAveragePriceProcessor instrumentHighUpdateFrequencyAveragePriceProcessor() {
-        return new InstrumentAveragePriceProcessor(4); //TODO: extract as variable
+        return new InstrumentAveragePriceProcessor(HIGH_FREQUENCY_INSTRUMENT_UPDATE_AVERAGE_BASE);
     }
     
     @Bean
     public InstrumentAveragePriceProcessor instrumentLowUpdateFrequencyAveragePriceProcessor() {
-        return new InstrumentAveragePriceProcessor(2); //TODO: extract as variable
+        return new InstrumentAveragePriceProcessor(LOW_FREQUENCY_INSTRUMENT_UPDATE_AVERAGE_BASE);
     }
     
     @Bean
@@ -184,7 +204,7 @@ public class InstrumentPersistedPriceBatchScheduler {
     
     public Step highFrequencyUpdatePersistedPriceStep() {
         return stepBuilderFactory.get("highFrequencyUpdatePersistedPriceStep")
-            .<Instrument, Instrument> chunk(2) //TODO: extract as variable
+            .<Instrument, Instrument> chunk(numberOfHighUpdateFrequencyInstruments)
             .reader(databaseHighUpdateFrequencyInstrumentItemReader(dataSource))
             .processor(instrumentHighPriceProcessor())
             .writer(instrumentPersistedPriceWriter())
@@ -202,7 +222,7 @@ public class InstrumentPersistedPriceBatchScheduler {
 
     public Step highFrequencyUpdateAveragePriceStep() {
         return stepBuilderFactory.get("highFrequencyUpdateAveragePriceStep")
-            .<Instrument, Instrument> chunk(2) //TODO: extract as variable
+            .<Instrument, Instrument> chunk(numberOfHighUpdateFrequencyInstruments)
             .reader(databaseHighUpdateFrequencyInstrumentItemReader(dataSource))
             .processor(instrumentHighUpdateFrequencyAveragePriceProcessor())
             .writer(instrumentPersistedPriceWriter())
@@ -220,7 +240,7 @@ public class InstrumentPersistedPriceBatchScheduler {
 
     public Step lowFrequencyUpdatePersistedPriceStep() {
         return stepBuilderFactory.get("lowFrequencyUpdatePersistedPriceStep")
-            .<Instrument, Instrument> chunk(4) //TODO: extract as variable
+            .<Instrument, Instrument> chunk(numberOfHighUpdateFrequencyInstruments)
             .reader(databaseLowUpdateFrequencyInstrumentItemReader(dataSource))
             .processor(instrumentHighPriceProcessor())
             .writer(instrumentPersistedPriceWriter())
@@ -238,7 +258,7 @@ public class InstrumentPersistedPriceBatchScheduler {
 
     public Step lowFrequencyUpdateAveragePriceStep() {
         return stepBuilderFactory.get("lowFrequencyUpdateAveragePriceStep")
-            .<Instrument, Instrument> chunk(4) //TODO: extract as variable
+            .<Instrument, Instrument> chunk(numberOfHighUpdateFrequencyInstruments)
             .reader(databaseLowUpdateFrequencyInstrumentItemReader(dataSource))
             .processor(instrumentLowUpdateFrequencyAveragePriceProcessor())
             .writer(instrumentPersistedPriceWriter())
@@ -249,43 +269,36 @@ public class InstrumentPersistedPriceBatchScheduler {
     // Scheduled Jobs
     //================================================================================
     
-   @Scheduled(fixedRate = 3000) //TODO: extract as variable
+   @Scheduled(fixedRate = PERSISTENT_PRICE_HIGH_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS)
     public void highFrequencyUpdatePersistedPrice() throws Exception {
         JobParameters param = new JobParametersBuilder().addString("JobID-highFrequencyUpdatePersistedPrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         JobExecution execution = updatePersistedPriceJobLauncher().run( highFrequencyUpdatePersistedPriceJob(), param);
     }
     
-    @Scheduled(fixedRate = 3000, initialDelay = 18000) //TODO: extract as variable
+    @Scheduled(fixedRate = PERSISTENT_PRICE_HIGH_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS, initialDelay = AVERAGE_PRICE_HIGH_FREQUENCY_INITIAL_DELAY_IN_MILISECONDS)
     public void highFrequencyUpdateAveragePrice() throws Exception {
         JobParameters param = new JobParametersBuilder().addString("Job-highFrequencyUpdateAveragePrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         JobExecution execution = updatePersistedPriceJobLauncher().run( highFrequencyUpdateAveragePriceJob(), param);
     }
 
-    @Scheduled(fixedRate = 5000) //TODO: extract as variable
+    @Scheduled(fixedRate = PERSISTENT_PRICE_LOW_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS)
     public void lowFrequencyUpdatePersistedPrice() throws Exception {
         JobParameters param = new JobParametersBuilder().addString("Job-lowFrequencyUpdatePersistedPrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         JobExecution execution = updatePersistedPriceJobLauncher().run( lowFrequencyUpdatePersistedPriceJob(), param);
     }
     
 
-    @Scheduled(fixedRate = 5000, initialDelay = 20000) //TODO: extract as variable
+    @Scheduled(fixedRate = PERSISTENT_PRICE_LOW_FREQUENCY_UPDATE_INTERVAL_IN_MILISECONDS, initialDelay = AVERAGE_PRICE_LOW_FREQUENCY_INITIAL_DELAY_IN_MILISECONDS)
     public void lowFrequencyUpdateAveragePrice() throws Exception {
         JobParameters param = new JobParametersBuilder().addString("Job-lowFrequencyUpdateAveragePrice-", String.valueOf(System.currentTimeMillis())).toJobParameters();
         JobExecution execution = updatePersistedPriceJobLauncher().run( lowFrequencyUpdateAveragePriceJob(), param);
-        timeInSeconds.getAndIncrement();
-        if (timeInSeconds.getAcquire() >2) { //TODO: extract as variable
+        timeOfLowFrequencyInstrumentUpdateAverageBase.getAndIncrement();
+        if (timeOfLowFrequencyInstrumentUpdateAverageBase.getAcquire() > LOW_FREQUENCY_INSTRUMENT_UPDATE_AVERAGE_BASE) {
             reportInstrumentPrice();
             log.info("All price processing jobs are completed, and the report is generated in the /output folder. Please press ctrl+c to exit the program.");
             stopJobSchedulerWhenSchedulerDestroyed();
         }
     }
-    
-    @Scheduled(fixedRate = 1000)
-    public void counter() throws Exception {
-        log.info("Time in seconds: " + String.valueOf(timer.getAcquire()));
-        timer.getAndIncrement();
-    }
-
     
     //================================================================================
     // Scheduler

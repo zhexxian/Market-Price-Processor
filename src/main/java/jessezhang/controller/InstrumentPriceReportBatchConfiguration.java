@@ -43,6 +43,9 @@ public class InstrumentPriceReportBatchConfiguration {
                 "second_highest_price, " +
                 "average_price " +
             "FROM instruments";
+            
+    @Value("${number.of.instruments}")
+    private int numberOfInstruments;
 
     @Autowired
     public DataSource dataSource;
@@ -98,7 +101,7 @@ public class InstrumentPriceReportBatchConfiguration {
 
     @Bean
     public Step reportInstrumentPriceStep() {
-    return stepBuilderFactory.get("reportInstrumentPriceStep").<Instrument, Instrument>chunk(4)
+    return stepBuilderFactory.get("reportInstrumentPriceStep").<Instrument, Instrument>chunk(numberOfInstruments)
             .reader(databaseInstrumentPriceItemReader(dataSource))
             .writer(instrumentPriceReportWriter())
             .build();
